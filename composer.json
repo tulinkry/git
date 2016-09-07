@@ -1,0 +1,23 @@
+{
+    "name": "tulinkry/git",
+    "description": "Nette framework utility for git deployment",
+    "authors": [
+        {
+            "name": "Kryštof Tulinger"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:tulinkry/tulinkry.git"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.1",
+        "nette/nette": ">=2.2",
+        "tulinkry/tulinkry": "dev-master"
+    },
+    "autoload": {
+        "classmap": ["src/"]
+    }
+}

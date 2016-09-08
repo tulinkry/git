@@ -24,10 +24,10 @@ class GitExtension extends CompilerExtension
         $config = $this -> validateConfig( $this -> defaults );
         $builder = $this -> getContainerBuilder();
 
-        Validators::assertField( $config, 'username', 'string:1..', 'configuration of \'%s\' in the git extension' );
-        Validators::assertField( $config, 'repository', 'string:1..', 'configuration of \'%s\' in the git extension' );
-        Validators::assertField( $config, 'file', 'string:1..', 'configuration of \'%s\' in the git extension' );
-        Validators::assertField( $config, 'branch', 'string:1..', 'configuration of \'%s\' in the git extension' );
+        Validators::assertField( $config, 'username', 'string:1..', 'configuration of \'%\' in the git extension' );
+        Validators::assertField( $config, 'repository', 'string:1..', 'configuration of \'%\' in the git extension' );
+        Validators::assertField( $config, 'file', 'string:1..', 'configuration of \'%\' in the git extension' );
+        Validators::assertField( $config, 'branch', 'string:1..', 'configuration of \'%\' in the git extension' );
 
         $builder -> addDefinition( $this -> prefix( "parameters" ) )
                 -> setClass( "Tulinkry\Git\Services\ParameterService", [$config ] );

@@ -9,6 +9,8 @@ class ParameterService extends Object
 
     /** @var array */
     public $params = array ();
+    /** @var null */
+    private $nullptr = NULL;
 
     public function __construct ( $config = array () ) {
         $this -> params = $config;
@@ -22,6 +24,7 @@ class ParameterService extends Object
             // avoid recursion
             return $this -> params[ $name ];
         }
+        return $this->nullptr;
     }
 
 }

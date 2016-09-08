@@ -4,7 +4,7 @@ namespace Tulinkry\Git;
 
 use Nette\Caching\IStorage;
 use Tulinkry\Application\UI\Presenter;
-use Tulinkry\Services\ParameterService;
+use Tulinkry\Git\Services\ParameterService;
 use Tulinkry\Zip\ZipArchiver;
 
 class GitController extends Presenter

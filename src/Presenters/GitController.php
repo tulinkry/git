@@ -182,8 +182,6 @@ EOF;
      * 4) Puts the page into usual mode
      */
     public function actionDefault () {
-        set_time_limit(0);
-
         $down = false;
         $wwwDir = $this->container->parameters['wwwDir'];
 

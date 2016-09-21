@@ -59,7 +59,7 @@ class GitExtension extends CompilerExtension
             }
         }
 
-        $config = $this->validateConfig($this->defaults, $config);
+        $config = $this->config = $this->validateConfig($this->defaults, $config);
 
         foreach($config['repositories'] as $name => &$repository) {
 

@@ -6,6 +6,7 @@ use Nette\Caching\IStorage;
 use Nette\IOException;
 use Nette\DI\Container;
 use Nette\Utils\FileSystem;
+use Nette\Utils\Finder;
 use Nette\Caching\Cache;
 use Tracy\Debugger;
 use Tulinkry\Application\UI\Presenter;
@@ -94,12 +95,20 @@ class GitController extends Presenter
                                 $repository -> branch));
 
         FileSystem::write($file, $content);
-        FileSystem::createDir($repository->directory);
 
         $zip = new ZipArchiver;
         if(($res = $zip -> open( $file )) !== TRUE) {
             throw new IOException("The zipped file from $download_url couldn't be extracted.");
         }
+
+        if(is_dir($repository->directory) && $repository->flush) {
+            // remove all in the directory but not the directory itself
+            foreach(Finder::find('*')->in($repository->directory) as $filename => $f) {
+                FileSystem::delete($filename);
+            }
+        }
+
+        FileSystem::createDir($repository->directory);
 
         $zip -> extractSubdirTo($repository->directory, sprintf('%s-%s', $repository -> repository, $repository -> branch));
         $zip -> close();

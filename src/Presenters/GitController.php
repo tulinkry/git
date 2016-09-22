@@ -114,6 +114,34 @@ class GitController extends Presenter
         $zip -> close();
     }
 
+   /**
+     * Trigger before callbacks
+     * @param  array $before   before callbacks
+     * @param  string $postdata post data from github
+     * @return boolean           return false if the sync should be aborted
+     */
+    private function runBefore($before, array $params = array()) {
+        if($before && is_array($before)) {
+            foreach($before as $callback) {
+                if(call_user_func_array($callback, $params) === FALSE) {
+                    throw new IOException("One of the callbacks prohibited the sync to be done");
+                }
+            }
+        }
+    }
+
+    /**
+     * Trigger after callbacks
+     * @param  array $after after callbacks
+     */
+    private function runAfter($after, array $params = array ()) {
+        if($after && is_array($after)) {
+            foreach($after as $callback) {
+                call_user_func_array($callback, $params);
+            }
+        }
+    }
+
     /**
      * @return string maintenance content
      */
@@ -174,6 +202,7 @@ EOF;
         FileSystem::delete($wwwDir . DIRECTORY_SEPARATOR . 'index.php.backup');
     }
 
+
     /**
      * Handles the incoming request to the git route
      * 1) Reads the input from github hook
@@ -190,8 +219,17 @@ EOF;
             $this -> error( "Couldn't read input" );
         }
 
+        // run before callbacks
+        try {
+            $this->runBefore($this->parameterService->before, [ $postdata ]);
+        } catch(IOException $e) {
+            Debugger::log('Updating from git: ' + $e->getMessage());
+            $this->error("One of the callbacks prohibited the sync to be done");
+        }
+
+
         if ( ($decoded = json_decode( $postdata )) === FALSE ) {
-            Debugger::log('Updating from git: couldn\'t decode json data');
+            Debugger::log('Updating from git: Couldn\'t decode json data');
             $this -> error( "Couldn't decode json data" );
         }
 
@@ -199,17 +237,18 @@ EOF;
         $auth = true;
         foreach($this->parameterService->repositories as $name => $repository) {
             if ( $repository->key && ! $this->verifySignature( $repository->key, $postdata ) ) {
-                Debugger::log("Updating from git: the repository {$repository->repository} requested key authentication, however it failed");
-                Debugger::log("Updating from git: secret is needed to authenticate this request for repository {$repository->repository}");
+                Debugger::log("Updating from git: The repository {$repository->repository} requested key authentication, however it failed");
+                Debugger::log("Updating from git: Secret is needed to authenticate this request for repository {$repository->repository}");
                 $auth = false;
             }
         }
 
         if(!$auth) {
-            $this->error("Updating from git: secret is needed to authenticate this request for repository {$repository->repository}");
+            $this->error("Updating from git: Secret is needed to authenticate this request for repository {$repository->repository}");
         }
 
-        if(file_exists($wwwDir . DIRECTORY_SEPARATOR . '.maintenance.php')) {
+        if($this->parameterService->maintenance &&
+            file_exists($wwwDir . DIRECTORY_SEPARATOR . '.maintenance.php')) {
             try {
                 $this->shutdownPage($wwwDir);
                 $down = true;
@@ -221,13 +260,29 @@ EOF;
         $errors = [];
         foreach($this->parameterService->repositories as $name => $repository) {
             try {
+                $this->runBefore($repository->before, [ $postdata, $repository ]);
                 $this->downloadRepository($repository);
             } catch(IOException $e) {
-                Debugger::log("Updating from git: syncing {$repository->repository} (named $name) failed");
+                Debugger::log("Updating from git: Syncing {$repository->repository} (named $name) failed");
                 Debugger::log("Updating from git: " . $e->getMessage());
                 $errors [$name] = $e->getMessage();
             }
+
+            try {
+                $this->runAfter($repository->after, [ $repository ]);
+            } catch(IOException $e) {
+                Debugger::log('Updating from git: ' + $e->getMessage());
+            }
+
         }
+
+        // run after callbacks
+        try {
+            $this->runAfter($this->parameterService->after);
+        } catch(IOException $e) {
+            Debugger::log('Updating from git: ' + $e->getMessage());
+        }
+
 
         // clear cache
         // does not work for latte because it manages the cache in its own way
@@ -239,7 +294,7 @@ EOF;
         FileSystem::delete($this->container->parameters['tempDir'] . DIRECTORY_SEPARATOR . self::TEMP_DIRECTORY);
         FileSystem::createDir($this->container->parameters['tempDir'] . DIRECTORY_SEPARATOR . "cache");
 
-        if($down) {
+        if($this->parameterService->maintenance && $down) {
             try {
                 $this->turnonPage($wwwDir);
             } catch(IOException $e) {

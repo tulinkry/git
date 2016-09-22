@@ -13,8 +13,11 @@ class GitExtension extends CompilerExtension
 {
 
     private $defaults = array (
+        'maintenance' => true,
         'repositories' => array(),
-        'url' => 'git'
+        'url' => 'git',
+        'after' => array(),
+        'before' => array()
     );
 
     private $repositoryDefault = array (
@@ -23,11 +26,28 @@ class GitExtension extends CompilerExtension
         'repository' => null,
         'branch' => 'master',
         'directory' => null,
+        'after' => array(),
+        'before' => array(),
         'key' => null,
         'flush' => false,
     );
 
 
+    private function validateCallbacks(&$config) {
+        $config['before'] = is_array($config['before']) ? $config['before'] : array ( $config['before'] );
+        $config['after'] = is_array($config['after']) ? $config['after'] : array ( $config['after'] );
+
+        Validators::assertField( $config, 'before', 'array', 'configuration of \'%\' in the git extension' );
+        Validators::assertField( $config, 'after', 'array', 'configuration of \'%\' in the git extension' );
+
+        foreach($config['before'] as $callback) {
+            Validators::assert($callback, 'callable');
+        }
+
+        foreach($config['after'] as $callback) {
+            Validators::assert($callback, 'callable');
+        }
+    }
 
     public function loadConfiguration () {
         $config = $this->getConfig($this -> defaults);
@@ -39,29 +59,37 @@ class GitExtension extends CompilerExtension
             // single provider
             $config['repositories'] ['default'] = $this->validateConfig($this->repositoryDefault, $this->config);
 
-            if(!isset($$config['repositories']['default']['directory'])) {
+            if(!isset($config['repositories']['default']['directory'])) {
                 $config['repositories'] ['default']['directory'] = $builder->parameters['appDir'] . DIRECTORY_SEPARATOR . '..';
             }
 
             unset($config['repositories']['default']['repositories']);
+            unset($config['repositories']['default']['maintenance']);
+
             foreach($this->repositoryDefault as $key => $value) {
-                if($key !== 'url') {
+                if(!in_array($key, [ 'url', 'after', 'before'])) {
                     unset($config[$key]);
                 }
             }
 
         } else {
             foreach($this->repositoryDefault as $key => $value) {
-                if($key !== 'url' && isset($config[$key])) {
+                if(!in_array($key, [ 'url', 'after', 'before']) && isset($config[$key])) {
                     throw new AssertionException("Configuration of '$key' in the git extension can't " .
                                                  "be specified when using multiple repositories");
                 }
             }
         }
 
+
         $config = $this->config = $this->validateConfig($this->defaults, $config);
 
+        $this->validateCallbacks($config);
+
+        Validators::assertField( $config, 'maintenance', 'boolean', 'configuration of \'%\' in the git extension' );
+
         foreach($config['repositories'] as $name => &$repository) {
+            Validators::assert($repository, 'array', 'configuration of \'repository\' in git extension');
 
             $repository = $this->validateConfig($this->repositoryDefault, $repository);
 
@@ -69,6 +97,8 @@ class GitExtension extends CompilerExtension
             Validators::assertField( $repository, 'repository', 'string:1..', 'configuration of \'%\' in the git extension' );
             Validators::assertField( $repository, 'flush', 'boolean', 'configuration of \'%\' in the git extension' );
             Validators::assertField( $repository, 'directory', 'string:1..', 'configuration of \'%\' in the git extension' );
+
+            $this->validateCallbacks($repository);
 
             if(!isset($repository['branch']) || empty($repository['branch'])) {
                 $repository['branch'] = 'master';

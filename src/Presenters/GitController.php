@@ -223,7 +223,7 @@ EOF;
         try {
             $this->runBefore($this->parameterService->before, [ $postdata ]);
         } catch(IOException $e) {
-            Debugger::log('Updating from git: ' + $e->getMessage());
+            Debugger::log('Updating from git: ' . $e->getMessage());
             $this->error("One of the callbacks prohibited the sync to be done");
         }
 
@@ -271,7 +271,7 @@ EOF;
             try {
                 $this->runAfter($repository->after, [ $repository ]);
             } catch(IOException $e) {
-                Debugger::log('Updating from git: ' + $e->getMessage());
+                Debugger::log('Updating from git: ' . $e->getMessage());
             }
 
         }
@@ -280,7 +280,7 @@ EOF;
         try {
             $this->runAfter($this->parameterService->after);
         } catch(IOException $e) {
-            Debugger::log('Updating from git: ' + $e->getMessage());
+            Debugger::log('Updating from git: ' . $e->getMessage());
         }
 
 
@@ -290,8 +290,8 @@ EOF;
         $cache = new Cache($this->cache);
         $cache->clean(array(Cache::ALL => true));
 
-        FileSystem::delete($this->container->parameters['tempDir'] . DIRECTORY_SEPARATOR . "cache");
         FileSystem::delete($this->container->parameters['tempDir'] . DIRECTORY_SEPARATOR . self::TEMP_DIRECTORY);
+        FileSystem::delete($this->container->parameters['tempDir'] . DIRECTORY_SEPARATOR . "cache");
         FileSystem::createDir($this->container->parameters['tempDir'] . DIRECTORY_SEPARATOR . "cache");
 
         if($this->parameterService->maintenance && $down) {

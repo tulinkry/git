@@ -88,6 +88,8 @@ class GitController extends Presenter
         }
 
         $tempDir = $this->container->parameters['tempDir'] . DIRECTORY_SEPARATOR . self::TEMP_DIRECTORY;
+        FileSystem::createDir($tempDir);
+
         $file = tempnam($tempDir,
                         sprintf('%s-%s-%s.zip-',
                                 $repository -> username,

@@ -9,7 +9,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@github.com:tulinkry/tulinkry.git"
+            "url": "https://github.com/tulinkry/tulinkry"
         }
     ],
     "require": {

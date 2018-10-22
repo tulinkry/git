@@ -8,7 +8,7 @@
     ],
     "require": {
         "php": ">=5.4 <6",
-        "nette/nette": ">=2.2 <2.4",
+        "nette/nette": ">=2.2 <2.4"
     },
     "autoload": {
         "classmap": ["src/"]

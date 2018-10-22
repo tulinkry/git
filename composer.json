@@ -6,16 +6,9 @@
             "name": "Kryštof Tulinger"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/tulinkry/tulinkry"
-        }
-    ],
     "require": {
-        "php": ">=5.3.1",
-        "nette/nette": ">=2.2",
-        "tulinkry/tulinkry": "dev-master"
+        "php": ">=5.4 <6",
+        "nette/nette": ">=2.2 <2.4",
     },
     "autoload": {
         "classmap": ["src/"]
